@@ -1,6 +1,6 @@
 # Numpy_FullyConnectedNeuralNetwork  
 
-Numpy로 구현한 Fully Connected Neural Network
+Numpy로 구현한 Fully Connected Neural Network  
 Computational graph를 이용한 Backpropagation  
 
 ## FCNN_class.py
