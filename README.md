@@ -12,5 +12,5 @@ Computational graph를 이용한 Backpropagation
     * dataset : MNIST  (dataset을 위해 TensorFlow function 사용)
         * from tensorflow.examples.tutorials.mnist import input_data #for MNIST dataset
 
-## 참조
+## Reference
     * Deep Learning from Scratch 서적.
