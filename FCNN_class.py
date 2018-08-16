@@ -1,10 +1,40 @@
 import numpy as np
 
+class initializer:
+	def xavier(self, shape):
+		return np.random.randn(*shape) / np.sqrt(shape[0])
+
+	def he(self, shape):
+		return np.random.randn(*shape) * np.sqrt(2) / np.sqrt(shape[0])
+
+	def normal(self, shape):
+		return np.random.randn(*shape)*0.01
+
+class dropout:
+	def __init__(self, keep_prob):
+		self.keep_prob = keep_prob
+		self.mask = None
+
+	def forward(self, x, is_train=True):
+		if is_train == True:
+			uniform = np.random.uniform(0, 1, size=x.shape) # [0, 1)
+			mask = uniform > self.keep_prob # keep_prob보다 작으면 false, 크면 true
+			#0.6으로 치면 0.6보다 작은 값들(==60%)는 false, 0.6보다 큰 값들(==40%)는 true
+			self.mask = mask #즉 mask는 지울 값들을 true로 mask 함.
+			x[mask] = 0 #true인 위치의 값을 0으로 dropout.
+			return x
+		else:
+			return x
+
+	def backward(self, grad):
+		grad[self.mask] = 0 #dropout 시켰던 부분은 미분값이 0이므로 grad도 0으로 할당.
+		return grad
+
 class affine:
-	def __init__(self, w_shape, b_shape):
+	def __init__(self, w_shape, b_shape, w_init, b_init=0):
 		self.x = None # input
-		self.w = np.random.randn(*w_shape)*0.1 # weight, list자체로 받지 못해서 *로 전달.
-		self.b = np.zeros(b_shape) # bias
+		self.w = w_init(w_shape)
+		self.b = np.full(b_shape, b_init).astype(np.float32) # bias
 		self.dw = None # w gradient
 		self.db = None # bias gradient
 
@@ -72,7 +102,6 @@ class softmax_cross_entropy_with_logits:
 		return (self.pred-self.target)/self.target.shape[0] #배치사이즈로 나눠줌. 여기서 안나누고 affine.backward에서 나눠도되긴함
 		#근데 affine.backward에서 나누면 affine 레이어마다 나눠야해서 계산량이 더 많음.
 
-
 class model:
 	def __init__(self):
 		self.graph = []
@@ -85,12 +114,15 @@ class model:
 	def connect_loss(self, node):
 		self.loss_graph = node
 
-	def forward(self, x):
+	def forward(self, x, is_train=True):
 		x = np.array(x)
 		
 		logits = x
 		for node in self.graph:
-			logits = node.forward(logits)
+			if 'dropout' in str(node):
+				logits = node.forward(logits, is_train)
+			else:
+				logits = node.forward(logits)
 		
 		#self.output_layer = logits
 		return logits
@@ -121,25 +153,3 @@ class model:
 		compare = (np.argmax(logits, axis) == np.argmax(y, axis))
 		return np.sum(compare)
 
-
-'''
-class mul:
-	def __init__(self):
-		self.a = None
-		self.b = None
-
-	def forward(self, a, b):
-		self.a = a
-		self.b = b
-		return a*b
-
-	def backward(self, grad=1):
-		return grad*self.b, grad*self.a
-
-class add:
-	def forward(self, a, b):
-		return a+b
-
-	def backward(self, grad=1):
-		return grad, grad
-'''

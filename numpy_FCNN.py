@@ -20,7 +20,7 @@ def train(model, data):
 		input_ = batch[:, :784]
 		target_ = batch[:, 784:]
 	
-		logits = model.forward(input_)
+		logits = model.forward(input_, is_train=True)
 		train_loss = model.backward(logits, target_, lr=lr)
 		loss += train_loss
 	
@@ -36,7 +36,7 @@ def validation(model, data):
 		input_ = batch[:, :784]
 		target_ = batch[:, 784:]
 	
-		logits = model.forward(input_)
+		logits = model.forward(input_, is_train=False)
 		vali_loss = model.calc_loss(logits, target_)
 		loss += vali_loss
 	
@@ -52,7 +52,7 @@ def test(model, data):
 		input_ = batch[:, :784]
 		target_ = batch[:, 784:]
 
-		logits = model.forward(input_)
+		logits = model.forward(input_, is_train=False)
 		check = model.correct(logits, target_, axis=1)
 		correct += check
 
@@ -69,37 +69,16 @@ def run(model, train_set, vali_set, test_set):
 
 
 model = fc.model()
-model.connect(fc.affine(w_shape=[784, 128], b_shape=[128]))
+w_init = fc.initializer()
+
+model.connect(fc.affine(w_shape=[784, 128], b_shape=[128], w_init=w_init.he, b_init=0))
 model.connect(fc.relu())
-model.connect(fc.affine(w_shape=[128, 128], b_shape=[128]))
+model.connect(fc.dropout(0.6))
+model.connect(fc.affine(w_shape=[128, 128], b_shape=[128], w_init=w_init.he, b_init=0))
 model.connect(fc.relu())
-model.connect(fc.affine(w_shape=[128, 10], b_shape=[10]))
+model.connect(fc.dropout(0.6))
+model.connect(fc.affine(w_shape=[128, 10], b_shape=[10], w_init=w_init.he, b_init=0))
 model.connect_loss(fc.softmax_cross_entropy_with_logits())
 
 run(model, train_set, vali_set, test_set)
 
-
-
-'''
-#xor
-x = [[0, 0], [0, 1], [1, 0], [1, 1]]
-y = [[1, 0], [0, 1], [0, 1], [1, 0]]
-
-
-model = fc.model()
-model.connect(fc.affine(w_shape=[2, 10], b_shape=[10]))
-model.connect(fc.relu())
-model.connect(fc.affine(w_shape=[10, 10], b_shape=[10]))
-model.connect(fc.relu())
-model.connect(fc.affine(w_shape=[10, 2], b_shape=[2]))
-model.connect_loss(fc.softmax_cross_entropy_with_logits())
-
-
-for i in range(300):
-	logits = model.forward(x)
-	loss = model.backward(logits, y, lr=0.1)
-	print(logits, loss)
-
-print(model.correct(logits, y, axis=1))
-
-'''
