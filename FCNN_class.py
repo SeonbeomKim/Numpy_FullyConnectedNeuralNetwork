@@ -3,10 +3,8 @@ import numpy as np
 class initializer:
 	def xavier(self, shape):
 		return np.random.randn(*shape) / np.sqrt(shape[0])
-
 	def he(self, shape):
 		return np.random.randn(*shape) * np.sqrt(2) / np.sqrt(shape[0])
-
 	def normal(self, shape):
 		return np.random.randn(*shape)*0.01
 
@@ -24,6 +22,7 @@ class dropout:
 			x[mask] = 0 #true인 위치의 값을 0으로 dropout.
 			return x
 		else:
+			self.mask = np.full(x.shape, False)
 			return x
 
 	def backward(self, grad):
